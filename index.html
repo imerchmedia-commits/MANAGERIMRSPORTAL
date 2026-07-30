@@ -53,10 +53,15 @@
       position: relative;
     }
 
-    .theme-toggle {
+    .top-controls {
       position: absolute;
       top: 16px;
       right: 16px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .theme-toggle, .logout-btn {
       background: none;
       border: 2px solid var(--border);
       padding: 6px 10px;
@@ -71,10 +76,20 @@
       color: #fff;
       border-color: var(--accent);
     }
+    .logout-btn {
+      color: #dc2626;
+      border-color: #dc2626;
+      background: rgba(220, 38, 38, 0.05);
+    }
+    .logout-btn:hover {
+      background: #dc2626;
+      color: #fff;
+    }
 
     .header {
       text-align: center;
       margin-bottom: 16px;
+      margin-top: 10px;
     }
     .logo-container {
       margin-bottom: 10px;
@@ -232,7 +247,10 @@
 <body data-theme="light">
 
   <div class="container">
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+    <div class="top-controls">
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
     
     <div class="header">
       <div class="logo-container">
@@ -322,15 +340,20 @@
       const themeBtn = document.getElementById('themeBtn');
       if (body.getAttribute('data-theme') === 'light') {
         body.setAttribute('data-theme', 'dark');
-        themeBtn.innerText = '☀️ Light';
+        themeBtn.innerText = '☀️';
       } else {
         body.setAttribute('data-theme', 'light');
-        themeBtn.innerText = '🌙 Dark';
+        themeBtn.innerText = '🌙';
       }
     }
 
+    function handleLogout() {
+      sessionStorage.removeItem("userEmail");
+      // Palitan ng 'login.html' kung 'login.html' ang pangalan ng login file mo sa repository
+      window.location.href = "login.html"; 
+    }
+
     window.onload = function() {
-      // Kunin ang email kung meron man, o maglagay ng default kung direktang binuksan
       const urlParams = new URLSearchParams(window.location.search);
       loggedInEmail = urlParams.get('email') || sessionStorage.getItem('userEmail') || "direct-access@imerchmedia.com";
       
