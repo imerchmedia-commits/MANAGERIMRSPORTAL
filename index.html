@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>IMRS - Manager Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --text: #334155;
+      --primary: #0f172a;
+      --accent: #2563eb;
+      --border: #334155;
+      --input-bg: #ffffff;
+      --input-border: #cbd5e1;
+      --status-bg: #f8fafc;
+    }
+
+    [data-theme="dark"] {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --text: #f1f5f9;
+      --primary: #f8fafc;
+      --accent: #3b82f6;
+      --border: #94a3b8;
+      --input-bg: #1f2937;
+      --input-border: #374151;
+      --status-bg: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 480px;
+      padding: 28px 20px;
+      border-radius: 0px;
+      border: 3px solid var(--border);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: 2px solid var(--border);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+      border-radius: 0px;
+    }
+    .theme-toggle:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .logo-container {
+      margin-bottom: 10px;
+    }
+    .logo-container img {
+      max-height: 45px;
+      width: auto;
+      object-fit: contain;
+    }
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .live-clock-box {
+      border: 2px solid var(--border);
+      padding: 8px;
+      text-align: center;
+      margin-bottom: 16px;
+      background: var(--status-bg);
+      border-radius: 0px;
+    }
+    .live-clock-box .date-txt {
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .live-clock-box .time-txt {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px; /* Iwas automatic zoom sa iPhone */
+      border: 2px solid var(--input-border);
+      border-radius: 0px;
+      outline: none;
+      background: var(--input-bg);
+      color: var(--text);
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    .action-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .btn-action {
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: 0px;
+      background: var(--card-bg);
+      cursor: pointer;
+      color: var(--text);
+      text-align: center;
+    }
+    .btn-action.active-in {
+      background: #16a34a;
+      color: white;
+      border-color: #16a34a;
+    }
+    .btn-action.active-out {
+      background: #dc2626;
+      color: white;
+      border-color: #dc2626;
+    }
+
+    .gps-status {
+      font-size: 11px;
+      padding: 10px;
+      border: 1px dashed var(--border);
+      border-radius: 0px;
+      background: var(--status-bg);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      background: var(--accent);
+      color: white;
+      border: 2px solid var(--accent);
+      border-radius: 0px;
+      cursor: pointer;
+    }
+    .btn-submit:hover {
+      opacity: 0.9;
+    }
+    .btn-submit:disabled {
+      background: #94a3b8;
+      border-color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 20px;
+      line-height: 1.4;
+    }
+
+    #loadingOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body data-theme="light">
+
+  <div class="container">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+    
+    <div class="header">
+      <div class="logo-container">
+        <img src="logo.png" alt="Imerch Logo">
+      </div>
+      <h1>IMRS Manager Portal</h1>
+    </div>
+
+    <div class="live-clock-box">
+      <div class="date-txt" id="liveDate">Loading date...</div>
+      <div class="time-txt" id="liveTime">00:00:00 AM</div>
+    </div>
+
+    <div class="form-group">
+      <label>Piliin ang Pangalan</label>
+      <select id="managerName">
+        <option value="" disabled selected>-- Select Manager --</option>
+        <option value="Edgar Namoro">Edgar Namoro</option>
+        <option value="Jerome Ore">Jerome Ore</option>
+        <option value="Gladys de Guzman">Gladys de Guzman</option>
+        <option value="Julie Jalondoon">Julie Jalondoon</option>
+        <option value="Joy Biazon">Joy Biazon</option>
+        <option value="Patrick Evangelista">Patrick Evangelista</option>
+        <option value="Ronnel Gingco">Ronnel Gingco</option>
+        <option value="Roxanne Fernando">Roxanne Fernando</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Action</label>
+      <div class="action-group">
+        <button type="button" class="btn-action" id="btnIn" onclick="setAction('Time In')">Time In</button>
+        <button type="button" class="btn-action" id="btnOut" onclick="setAction('Time Out')">Time Out</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Field Name / Location Purpose</label>
+      <input type="text" id="locationField" placeholder="Halimbawa: Client Visit - Makati">
+    </div>
+
+    <div class="gps-status" id="gpsStatus">
+      <span>📍</span> <span id="gpsText">Kinukuha ang real-time GPS location...</span>
+    </div>
+
+    <button class="btn-submit" id="submitBtn" onclick="submitData()" disabled>I-submit ang Attendance</button>
+
+    <div class="footer-note">
+      &copy; 2026 iMerch Media Inc. | System Developed By Ron Sarmenta<br>
+      <strong>Love Care Share Communicate Trust</strong>
+    </div>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div>Sine-save ang real-time data...</div>
+  </div>
+
+  <script>
+    let selectedAction = "";
+    let currentLat = null;
+    let currentLng = null;
+    let currentAccuracy = null;
+    let loggedInEmail = "";
+
+    function updateClock() {
+      const now = new Date();
+      const optionsDate = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
+      document.getElementById('liveDate').innerText = now.toLocaleDateString('en-US', optionsDate);
+
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      
+      hours = hours % 12;
+      hours = hours ? hours : 12; 
+      const strHours = String(hours).padStart(2, '0');
+
+      document.getElementById('liveTime').innerText = `${strHours}:${minutes}:${seconds} ${ampm}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function toggleTheme() {
+      const body = document.body;
+      const themeBtn = document.getElementById('themeBtn');
+      if (body.getAttribute('data-theme') === 'light') {
+        body.setAttribute('data-theme', 'dark');
+        themeBtn.innerText = '☀️ Light';
+      } else {
+        body.setAttribute('data-theme', 'light');
+        themeBtn.innerText = '🌙 Dark';
+      }
+    }
+
+    window.onload = function() {
+      // Kunin ang email mula sa URL parameter o sessionStorage galing sa Login page
+      const urlParams = new URLSearchParams(window.location.search);
+      loggedInEmail = urlParams.get('email') || sessionStorage.getItem('userEmail');
+      
+      if (!loggedInEmail) {
+        alert("⚠️ Walang nakitang active session. Mangyaring mag-log in muli.");
+        window.location.href = "login.html";
+        return;
+      }
+      
+      getGPSLocation();
+    };
+
+    function getGPSLocation() {
+      const gpsText = document.getElementById("gpsText");
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            currentLat = position.coords.latitude;
+            currentLng = position.coords.longitude;
+            currentAccuracy = position.coords.accuracy;
+
+            gpsText.innerHTML = `GPS Locked! (Accuracy: ${Math.round(currentAccuracy)}m)`;
+            document.getElementById("submitBtn").disabled = false;
+          },
+          function(error) {
+            let errorMsg = "Hindi makuha ang GPS location.";
+            if (error.code === error.PERMISSION_DENIED) {
+              errorMsg = "Kailangan i-allow ang Location Permission!";
+            }
+            gpsText.innerHTML = `<span style="color:red;">${errorMsg}</span>`;
+            alert("⚠️ " + errorMsg + " Pakibuksan ang GPS services ng iyong device.");
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        alert("Hindi sinusuportahan ng iyong device ang Geolocation.");
+      }
+    }
+
+    function setAction(action) {
+      selectedAction = action;
+      document.getElementById("btnIn").className = action === 'Time In' ? 'btn-action active-in' : 'btn-action';
+      document.getElementById("btnOut").className = action === 'Time Out' ? 'btn-action active-out' : 'btn-action';
+    }
+
+    function submitData() {
+      const name = document.getElementById("managerName").value;
+      const locationField = document.getElementById("locationField").value.trim();
+
+      if (!name) {
+        alert("Pakipili ang iyong pangalan sa dropdown.");
+        return;
+      }
+      if (!selectedAction) {
+        alert("Pumili kung Time In o Time Out.");
+        return;
+      }
+      if (!locationField) {
+        alert("I-type ang iyong Field Name / Location details.");
+        document.getElementById("locationField").focus();
+        return;
+      }
+      if (currentLat === null || currentLng === null) {
+        alert("Naghihintay pa sa GPS signal. Pakihintay sandali.");
+        getGPSLocation();
+        return;
+      }
+
+      document.getElementById("loadingOverlay").style.display = "flex";
+
+      const payload = {
+        email: loggedInEmail,
+        name: name,
+        action: selectedAction,
+        locationField: locationField,
+        lat: currentLat,
+        lng: currentLng,
+        accuracy: currentAccuracy,
+        device: navigator.userAgent
+      };
+
+      // ILAGAY DITO ANG APPS SCRIPT WEB APP URL MO (Yung nagtatapos sa /exec)
+      const webAppUrl = "https://script.google.com/macros/s/AKfycbxERGjlj_WGTSpb5YB6jKiJkfl9omPoGFsIS_xXWul6YOXsUZBWnyfVLKY-m4oRnz15/exec";
+
+      fetch(webAppUrl, {
+        method: "POST",
+        mode: "no-cors", // Kinakailangan para sa cross-origin request patungo sa Apps Script
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        document.getElementById("loadingOverlay").style.display = "none";
+        alert("✅ Matagumpay na naitala ang iyong " + selectedAction + "!");
+        location.reload();
+      })
+      .catch(error => {
+        document.getElementById("loadingOverlay").style.display = "none";
+        console.error("Error:", error);
+        alert("❌ May error sa pag-save. Subukang muli.");
+      });
+    }
+  </script>
+</body>
+</html>
