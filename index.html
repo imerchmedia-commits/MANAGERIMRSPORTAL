@@ -330,15 +330,9 @@
     }
 
     window.onload = function() {
-      // Kunin ang email mula sa URL parameter o sessionStorage galing sa Login page
+      // Kunin ang email kung meron man, o maglagay ng default kung direktang binuksan
       const urlParams = new URLSearchParams(window.location.search);
-      loggedInEmail = urlParams.get('email') || sessionStorage.getItem('userEmail');
-      
-      if (!loggedInEmail) {
-        alert("⚠️ Walang nakitang active session. Mangyaring mag-log in muli.");
-        window.location.href = "login.html";
-        return;
-      }
+      loggedInEmail = urlParams.get('email') || sessionStorage.getItem('userEmail') || "direct-access@imerchmedia.com";
       
       getGPSLocation();
     };
@@ -412,12 +406,11 @@
         device: navigator.userAgent
       };
 
-      // ILAGAY DITO ANG APPS SCRIPT WEB APP URL MO (Yung nagtatapos sa /exec)
       const webAppUrl = "https://script.google.com/macros/s/AKfycbxERGjlj_WGTSpb5YB6jKiJkfl9omPoGFsIS_xXWul6YOXsUZBWnyfVLKY-m4oRnz15/exec";
 
       fetch(webAppUrl, {
         method: "POST",
-        mode: "no-cors", // Kinakailangan para sa cross-origin request patungo sa Apps Script
+        mode: "no-cors",
         headers: {
           "Content-Type": "application/json"
         },
