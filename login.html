@@ -128,15 +128,15 @@
     </div>
 
     <div class="error-msg" id="errorMsg">
-      ⚠️ Access Denied. Ang email na ito ay hindi awtorisado sa sistema.
+      ⚠️ Access Denied. This email address is not authorized in the system.
     </div>
 
     <div class="form-group">
       <label>Authorized Company Email</label>
-      <input type="email" id="companyEmail" placeholder="pangalan@imerchmedia.net" autocomplete="off" autocapitalize="none">
+      <input type="email" id="companyEmail" placeholder="name@imerchmedia.net" autocomplete="off" autocapitalize="none">
     </div>
 
-    <button class="btn-login" onclick="validateLogin()">Mag-login sa Portal</button>
+    <button class="btn-login" onclick="validateLogin()">LOGIN</button>
 
     <div class="footer-note">
       &copy; 2026 iMerch Media Inc. | System Developed By Ron Sarmenta<br>
@@ -145,7 +145,7 @@
   </div>
 
   <script>
-    // Whitelist ng mga authorized managers at admin
+    // Whitelist of authorized managers and admins
     const allowedEmails = [
       "gladys.deguzman@imerchmedia.net",
       "joy.biazon@imerchmedia.net",
@@ -169,23 +169,23 @@
       const errorDiv = document.getElementById("errorMsg");
 
       if (!emailInput) {
-        errorDiv.innerText = "⚠️ Pakilagay ang iyong company email.";
+        errorDiv.innerText = "⚠️ Please enter your company email address.";
         errorDiv.style.display = "block";
         return;
       }
 
       if (!allowedEmails.includes(emailInput)) {
-        errorDiv.innerText = "⚠️ Unauthorized Email! Tanging mga nakatalagang Manager at Admin lamang ang pinapayagan.";
+        errorDiv.innerText = "⚠️ Unauthorized Email! Only designated Managers and Admins are permitted.";
         errorDiv.style.display = "block";
         return;
       }
 
       errorDiv.style.display = "none";
       
-      // I-save sa sessionStorage bilang backup session
+      // Save to sessionStorage as a backup session
       sessionStorage.setItem("userEmail", emailInput);
       
-      // Paglipat papunta sa index.html (Manager Portal)
+      // Redirect to index.html (Manager Portal)
       window.location.href = "index.html?email=" + encodeURIComponent(emailInput);
     }
   </script>
