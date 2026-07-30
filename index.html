@@ -140,7 +140,7 @@
     select, input[type="text"] {
       width: 100%;
       padding: 12px;
-      font-size: 16px; /* Iwas automatic zoom sa iPhone */
+      font-size: 16px;
       border: 2px solid var(--input-border);
       border-radius: 0px;
       outline: none;
@@ -265,7 +265,7 @@
     </div>
 
     <div class="form-group">
-      <label>Piliin ang Pangalan</label>
+      <label>Select Manager Name</label>
       <select id="managerName">
         <option value="" disabled selected>-- Select Manager --</option>
         <option value="Edgar Namoro">Edgar Namoro</option>
@@ -276,6 +276,7 @@
         <option value="Patrick Evangelista">Patrick Evangelista</option>
         <option value="Ronnel Gingco">Ronnel Gingco</option>
         <option value="Roxanne Fernando">Roxanne Fernando</option>
+        <option value="Ron Sarmenta">Ron Sarmenta</option>
       </select>
     </div>
 
@@ -289,14 +290,14 @@
 
     <div class="form-group">
       <label>Field Name / Location Purpose</label>
-      <input type="text" id="locationField" placeholder="Halimbawa: Client Visit - Makati">
+      <input type="text" id="locationField" placeholder="e.g., Client Visit - Makati">
     </div>
 
     <div class="gps-status" id="gpsStatus">
-      <span>📍</span> <span id="gpsText">Kinukuha ang real-time GPS location...</span>
+      <span>📍</span> <span id="gpsText">Acquiring real-time GPS location...</span>
     </div>
 
-    <button class="btn-submit" id="submitBtn" onclick="submitData()" disabled>I-submit ang Attendance</button>
+    <button class="btn-submit" id="submitBtn" onclick="submitData()" disabled>Submit Attendance</button>
 
     <div class="footer-note">
       &copy; 2026 iMerch Media Inc. | System Developed By Ron Sarmenta<br>
@@ -306,7 +307,7 @@
 
   <div id="loadingOverlay">
     <div class="spinner"></div>
-    <div>Sine-save ang real-time data...</div>
+    <div>Saving real-time data...</div>
   </div>
 
   <script>
@@ -315,6 +316,19 @@
     let currentLng = null;
     let currentAccuracy = null;
     let loggedInEmail = "";
+
+    // Mapping ng email patungo sa exact name sa dropdown
+    const emailToManagerMap = {
+      "edgar.namoro@imerchmedia.net": "Edgar Namoro",
+      "jerome.ore@imerchmedia.net": "Jerome Ore",
+      "gladys.deguzman@imerchmedia.net": "Gladys de Guzman",
+      "julie.jalandoon@imerchmedia.net": "Julie Jalondoon",
+      "joy.biazon@imerchmedia.net": "Joy Biazon",
+      "jan.evangelista@imerchmedia.net": "Patrick Evangelista",
+      "ronnel.gingco@imerchmedia.net": "Ronnel Gingco",
+      "roxanne.fernando@imerchmedia.net": "Roxanne Fernando",
+      "ron.sarmenta@imerchmedia.net": "Ron Sarmenta"
+    };
 
     function updateClock() {
       const now = new Date();
@@ -349,14 +363,19 @@
 
     function handleLogout() {
       sessionStorage.removeItem("userEmail");
-      // Palitan ng 'login.html' kung 'login.html' ang pangalan ng login file mo sa repository
       window.location.href = "login.html"; 
     }
 
     window.onload = function() {
       const urlParams = new URLSearchParams(window.location.search);
-      loggedInEmail = urlParams.get('email') || sessionStorage.getItem('userEmail') || "direct-access@imerchmedia.com";
+      loggedInEmail = (urlParams.get('email') || sessionStorage.getItem('userEmail') || "").trim().toLowerCase();
       
+      // Auto-select manager based on email mapping
+      if (loggedInEmail && emailToManagerMap[loggedInEmail]) {
+        const managerSelect = document.getElementById("managerName");
+        managerSelect.value = emailToManagerMap[loggedInEmail];
+      }
+
       getGPSLocation();
     };
 
@@ -373,17 +392,17 @@
             document.getElementById("submitBtn").disabled = false;
           },
           function(error) {
-            let errorMsg = "Hindi makuha ang GPS location.";
+            let errorMsg = "Unable to retrieve GPS location.";
             if (error.code === error.PERMISSION_DENIED) {
-              errorMsg = "Kailangan i-allow ang Location Permission!";
+              errorMsg = "Location permission is required!";
             }
             gpsText.innerHTML = `<span style="color:red;">${errorMsg}</span>`;
-            alert("⚠️ " + errorMsg + " Pakibuksan ang GPS services ng iyong device.");
+            alert("⚠️ " + errorMsg + " Please enable GPS services on your device.");
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       } else {
-        alert("Hindi sinusuportahan ng iyong device ang Geolocation.");
+        alert("Geolocation is not supported by your device.");
       }
     }
 
@@ -398,20 +417,20 @@
       const locationField = document.getElementById("locationField").value.trim();
 
       if (!name) {
-        alert("Pakipili ang iyong pangalan sa dropdown.");
+        alert("Please select your name from the dropdown.");
         return;
       }
       if (!selectedAction) {
-        alert("Pumili kung Time In o Time Out.");
+        alert("Please select either Time In or Time Out.");
         return;
       }
       if (!locationField) {
-        alert("I-type ang iyong Field Name / Location details.");
+        alert("Please enter your Field Name / Location details.");
         document.getElementById("locationField").focus();
         return;
       }
       if (currentLat === null || currentLng === null) {
-        alert("Naghihintay pa sa GPS signal. Pakihintay sandali.");
+        alert("Waiting for GPS signal. Please wait a moment.");
         getGPSLocation();
         return;
       }
@@ -441,13 +460,13 @@
       })
       .then(response => {
         document.getElementById("loadingOverlay").style.display = "none";
-        alert("✅ Matagumpay na naitala ang iyong " + selectedAction + "!");
+        alert("✅ Your " + selectedAction + " has been successfully recorded!");
         location.reload();
       })
       .catch(error => {
         document.getElementById("loadingOverlay").style.display = "none";
         console.error("Error:", error);
-        alert("❌ May error sa pag-save. Subukang muli.");
+        alert("❌ Error saving data. Please try again.");
       });
     }
   </script>
