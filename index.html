@@ -150,6 +150,12 @@
     select:focus, input[type="text"]:focus {
       border-color: var(--accent);
     }
+    /* Estilo kapag naka-disable o naka-lock ang dropdown */
+    select:disabled {
+      opacity: 0.8;
+      cursor: not-allowed;
+      background: var(--status-bg);
+    }
 
     .action-group {
       display: grid;
@@ -317,7 +323,6 @@
     let currentAccuracy = null;
     let loggedInEmail = "";
 
-    // Mapping ng email patungo sa exact name sa dropdown
     const emailToManagerMap = {
       "edgar.namoro@imerchmedia.net": "Edgar Namoro",
       "jerome.ore@imerchmedia.net": "Jerome Ore",
@@ -370,10 +375,11 @@
       const urlParams = new URLSearchParams(window.location.search);
       loggedInEmail = (urlParams.get('email') || sessionStorage.getItem('userEmail') || "").trim().toLowerCase();
       
-      // Auto-select manager based on email mapping
+      // Auto-select manager and LOCK the dropdown field so it cannot be changed
       if (loggedInEmail && emailToManagerMap[loggedInEmail]) {
         const managerSelect = document.getElementById("managerName");
         managerSelect.value = emailToManagerMap[loggedInEmail];
+        managerSelect.disabled = true; // Naka-lock na rito para hindi na mapalitan
       }
 
       getGPSLocation();
@@ -413,6 +419,7 @@
     }
 
     function submitData() {
+      // Gumamit ng .value kahit naka-disabled para masama pa rin sa payload/submission data
       const name = document.getElementById("managerName").value;
       const locationField = document.getElementById("locationField").value.trim();
 
