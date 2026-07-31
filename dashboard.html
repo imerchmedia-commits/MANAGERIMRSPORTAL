@@ -333,12 +333,18 @@
       </div>
       <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-          <h3>📊 Cut-off & Search Filter Guide</h3>
+          <h3>📊 Cut-off, Search & Export Guide</h3>
           <p style="font-size: 13px; line-height: 1.5; color: var(--text); margin-bottom: 12px;">
-            Pumili ng <b>Start Date</b> at <b>End Date</b> para salain ang mga attendance records base sa napiling cut-off period. Gamitin ang <b>Search Bar</b> para mabilis na hanapin ang pangalan o lokasyon ng manager.
+            Pumili ng <b>Start Date</b> at <b>End Date</b> para salain ang mga attendance records. Pwedeng i-export ang buong listahan o pumili ng tiyak na manager/user sa ibaba para sa per-user Excel export.
           </p>
         </div>
-        <div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="filter-group">
+            <label>Select User to Export (Optional)</label>
+            <select id="exportUserSelect">
+              <option value="ALL">-- Lahat ng User (All Records) --</option>
+            </select>
+          </div>
           <button class="btn btn-export" onclick="exportToExcel()" style="width: 100%; padding: 12px; font-weight: 700;">
             📥 Export Filtered Data to Excel (.xlsx)
           </button>
@@ -444,16 +450,14 @@
     function updateClock() {
       const now = new Date();
       
-      // 12-hour format time string
       let hours = now.getHours();
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
       const ampm = hours >= 12 ? 'PM' : 'AM';
       hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
+      hours = hours ? hours : 12;
       const timeStr = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
 
-      // Date string format
       const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
       const dateStr = now.toLocaleDateString('en-US', options);
 
@@ -521,6 +525,7 @@
         .then(data => {
           document.getElementById("loadingOverlay").style.display = "none";
           allRecords = data;
+          populateUserDropdown(allRecords);
           renderTable(allRecords);
           updateMapMarkers(allRecords);
         })
@@ -529,6 +534,27 @@
           document.getElementById("loadingOverlay").style.display = "none";
           alert("⚠️ Na-load ang interface. Siguraduhing naka-setup ang doGet(e) sa iyong code.gs para mag-pull ng data.");
         });
+    }
+
+    function populateUserDropdown(records) {
+      const select = document.getElementById("exportUserSelect");
+      // Panatilihin ang default option
+      select.innerHTML = `<option value="ALL">-- Lahat ng User (All Records) --</option>`;
+      
+      // Kunin ang natatanging listahan ng mga email/pangalan
+      const uniqueUsers = {};
+      records.forEach(row => {
+        if (row.email && row.email !== "N/A") {
+          uniqueUsers[row.email.trim().toLowerCase()] = row.name || row.email;
+        }
+      });
+
+      for (let email in uniqueUsers) {
+        const opt = document.createElement("option");
+        opt.value = email;
+        opt.textContent = `${uniqueUsers[email]} (${email})`;
+        select.appendChild(opt);
+      }
     }
 
     function renderTable(records) {
@@ -627,14 +653,91 @@
     }
 
     function exportToExcel() {
-      const table = document.getElementById("attendanceTable");
-      if (!table || table.rows.length <= 1) {
-        alert("⚠️ Walang ma-export na data.");
+      const selectedEmail = document.getElementById("exportUserSelect").value;
+      const startDateVal = document.getElementById("startDate").value;
+      const endDateVal = document.getElementById("endDate").value;
+
+      // Salain ang data base sa napiling user at dates kung mayroon man
+      let exportData = allRecords.filter(row => {
+        if (selectedEmail !== "ALL") {
+          if (!row.email || row.email.trim().toLowerCase() !== selectedEmail) {
+            return false;
+          }
+        }
+
+        if (startDateVal || endDateVal) {
+          if (!row.timestamp) return false;
+          const rowDate = new Date(row.timestamp);
+          if (isNaN(rowDate)) return true;
+          rowDate.setHours(0,0,0,0);
+
+          if (startDateVal) {
+            const start = new Date(startDateVal);
+            start.setHours(0,0,0,0);
+            if (rowDate < start) return false;
+          }
+          if (endDateVal) {
+            const end = new Date(endDateVal);
+            end.setHours(23,59,59,999);
+            if (rowDate > end) return false;
+          }
+        }
+
+        return true;
+      });
+
+      if (!exportData || exportData.length === 0) {
+        alert("⚠️ Walang nakitang data na swak sa iyong napiling user/filter para i-export.");
         return;
       }
 
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Attendance Cut-off" });
-      XLSX.writeFile(wb, `IMRS_Attendance_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+      // Gumawa ng temporary table para sa SheetJS conversion
+      let tempTable = document.createElement("table");
+      let thead = document.createElement("thead");
+      thead.innerHTML = `
+        <tr>
+          <th>Timestamp</th>
+          <th>Email</th>
+          <th>Name</th>
+          <th>Time In</th>
+          <th>Time Out</th>
+          <th>Total Duration</th>
+          <th>Location / Purpose</th>
+          <th>Remarks</th>
+          <th>Latitude</th>
+          <th>Longitude</th>
+          <th>Accuracy / Status</th>
+          <th>Google Maps</th>
+          <th>Device</th>
+        </tr>
+      `;
+      tempTable.appendChild(thead);
+
+      let tbody = document.createElement("tbody");
+      exportData.forEach(row => {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.timestamp || ''}</td>
+          <td>${row.email || ''}</td>
+          <td>${row.name || ''}</td>
+          <td>${row.timeIn || ''}</td>
+          <td>${row.timeOut || ''}</td>
+          <td>${row.duration || ''}</td>
+          <td>${row.location || ''}</td>
+          <td>${row.remarks || ''}</td>
+          <td>${row.lat || ''}</td>
+          <td>${row.lng || ''}</td>
+          <td>${row.status || ''}</td>
+          <td>${row.mapsLink || ''}</td>
+          <td>${row.device || ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tempTable.appendChild(tbody);
+
+      const wb = XLSX.utils.table_to_book(tempTable, { sheet: "Attendance Report" });
+      let fileNameSuffix = selectedEmail === "ALL" ? "All_Users" : selectedEmail.replace(/[^a-zA-Z0-9]/g, "_");
+      XLSX.writeFile(wb, `IMRS_Report_${fileNameSuffix}_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
   </script>
 </body>
