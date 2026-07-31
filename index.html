@@ -137,7 +137,7 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    select, input[type="text"] {
+    select, input[type="text"], textarea {
       width: 100%;
       padding: 12px;
       font-size: 16px;
@@ -147,7 +147,7 @@
       background: var(--input-bg);
       color: var(--text);
     }
-    select:focus, input[type="text"]:focus {
+    select:focus, input[type="text"]:focus, textarea:focus {
       border-color: var(--accent);
     }
     select:disabled {
@@ -295,7 +295,16 @@
 
     <div class="form-group">
       <label>Field Name / Location Purpose</label>
-      <input type="text" id="locationField" placeholder="e.g., Client Visit - Makati">
+      <select id="locationSelect" onchange="handleLocationChange()" style="margin-bottom: 8px;">
+        <option value="I-Merch Main Office Mandaluyong">I-Merch Main Office Mandaluyong</option>
+        <option value="OTHERS">Others (Type Location...)</option>
+      </select>
+      <input type="text" id="customLocationInput" placeholder="Enter custom location/purpose" style="display: none;">
+    </div>
+
+    <div class="form-group">
+      <label>Remarks</label>
+      <input type="text" id="remarksInput" placeholder="Optional remarks (e.g., meeting, field visit)">
     </div>
 
     <div class="gps-status" id="gpsStatus">
@@ -370,12 +379,23 @@
       window.location.href = "login.html"; 
     }
 
+    function handleLocationChange() {
+      const selectVal = document.getElementById("locationSelect").value;
+      const customInput = document.getElementById("customLocationInput");
+      if (selectVal === "OTHERS") {
+        customInput.style.display = "block";
+        customInput.focus();
+      } else {
+        customInput.style.display = "none";
+        customInput.value = "";
+      }
+    }
+
     window.onload = function() {
       const urlParams = new URLSearchParams(window.location.search);
       const urlEmail = urlParams.get('email');
       const sessionEmail = sessionStorage.getItem('userEmail');
 
-      // Security check: Kung walang email sa URL o walang session, ibalik sa login.html
       if (!urlEmail || !sessionEmail || urlEmail.trim().toLowerCase() !== sessionEmail.trim().toLowerCase()) {
         alert("⚠️ Unauthorized Access or Session Expired. Please log in again.");
         window.location.href = "login.html";
@@ -384,7 +404,6 @@
 
       loggedInEmail = sessionEmail.trim().toLowerCase();
       
-      // Auto-select manager and lock dropdown
       if (emailToManagerMap[loggedInEmail]) {
         const managerSelect = document.getElementById("managerName");
         managerSelect.value = emailToManagerMap[loggedInEmail];
@@ -433,7 +452,14 @@
 
     function submitData() {
       const name = document.getElementById("managerName").value;
-      const locationField = document.getElementById("locationField").value.trim();
+      const locationSelectVal = document.getElementById("locationSelect").value;
+      let locationField = locationSelectVal;
+      
+      if (locationSelectVal === "OTHERS") {
+        locationField = document.getElementById("customLocationInput").value.trim();
+      }
+
+      const remarks = document.getElementById("remarksInput").value.trim();
 
       if (!name) {
         alert("Please select your name from the dropdown.");
@@ -444,8 +470,7 @@
         return;
       }
       if (!locationField) {
-        alert("Please enter your Field Name / Location details.");
-        document.getElementById("locationField").focus();
+        alert("Please select or enter your Field Name / Location details.");
         return;
       }
       if (currentLat === null || currentLng === null) {
@@ -461,6 +486,7 @@
         name: name,
         action: selectedAction,
         locationField: locationField,
+        remarks: remarks || "N/A",
         lat: currentLat,
         lng: currentLng,
         accuracy: currentAccuracy,
