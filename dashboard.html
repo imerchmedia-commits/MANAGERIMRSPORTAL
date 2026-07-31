@@ -468,6 +468,25 @@
       }
     }
 
+    // --- ACTIVITY LOGGING HELPER FUNCTION ---
+    function logAdminActivity(action, details) {
+      const sessionEmail = sessionStorage.getItem('adminUserEmail') || document.getElementById("loginEmailInput")?.value || "N/A";
+      
+      const payload = {
+        email: sessionEmail,
+        name: sessionEmail,
+        action: action,
+        details: details
+      };
+
+      fetch(webAppUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(err => console.error("Logging error:", err));
+    }
+
     function handleDashboardLogin() {
       const inputEmail = document.getElementById("loginEmailInput").value.trim().toLowerCase();
       if (!inputEmail) {
@@ -478,6 +497,10 @@
       if (allowedAdminEmails.includes(inputEmail)) {
         sessionStorage.setItem('adminUserEmail', inputEmail);
         document.getElementById("loginModal").style.display = "none";
+        
+        // Mag-log ng pag-login
+        logAdminActivity("LOGIN", "Admin successfully logged in to dashboard.");
+        
         initDashboard();
       } else {
         alert("❌ Access Denied: Unauthorized email address.");
@@ -731,6 +754,9 @@
         tbody.appendChild(tr);
       });
       tempTable.appendChild(tbody);
+
+      // Mag-log ng pag-export ng report
+      logAdminActivity("EXPORT_REPORT", `Exported attendance report for: ${selectedEmail} (Start: ${startDateVal || 'None'}, End: ${endDateVal || 'None'})`);
 
       const wb = XLSX.utils.table_to_book(tempTable, { sheet: "Attendance Report" });
       let fileNameSuffix = selectedEmail === "ALL" ? "All_Users" : selectedEmail.replace(/[^a-zA-Z0-9]/g, "_");
