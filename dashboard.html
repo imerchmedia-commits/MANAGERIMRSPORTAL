@@ -424,11 +424,11 @@
     const allowedAdminEmails = [
       "ron.sarmenta@imerchmedia.net",
       "arem.gonzales@imerchmedia.net",
-      "eleazar.farmocan@imerchmedia.net",
       "jobey@imerchmedia.com",
       "glenn@imerchmedia.com",
-      "vicky@imerchmedia.com"
-       ];
+      "vicky@imerchmedia.com",
+      "eleazar.farmocan@imerchmedia.net"
+    ];
 
     const webAppUrl = "https://script.google.com/macros/s/AKfycbxFzaoVv-fpWR8P7IUPZasfUuuu_9ArklU5MdmcW2AcPONGca0ALQdzcr1TpLc9HAqz/exec";
 
@@ -539,10 +539,8 @@
 
     function populateUserDropdown(records) {
       const select = document.getElementById("exportUserSelect");
-      // Panatilihin ang default option
       select.innerHTML = `<option value="ALL">-- Lahat ng User (All Records) --</option>`;
       
-      // Kunin ang natatanging listahan ng mga email/pangalan
       const uniqueUsers = {};
       records.forEach(row => {
         if (row.email && row.email !== "N/A") {
@@ -658,7 +656,6 @@
       const startDateVal = document.getElementById("startDate").value;
       const endDateVal = document.getElementById("endDate").value;
 
-      // Salain ang data base sa napiling user at dates kung mayroon man
       let exportData = allRecords.filter(row => {
         if (selectedEmail !== "ALL") {
           if (!row.email || row.email.trim().toLowerCase() !== selectedEmail) {
@@ -692,7 +689,6 @@
         return;
       }
 
-      // Gumawa ng temporary table para sa SheetJS conversion
       let tempTable = document.createElement("table");
       let thead = document.createElement("thead");
       thead.innerHTML = `
