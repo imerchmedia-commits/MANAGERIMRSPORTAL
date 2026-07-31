@@ -145,7 +145,6 @@
   </div>
 
   <script>
-    // Whitelist of authorized managers and admins
     const allowedEmails = [
       "gladys.deguzman@imerchmedia.net",
       "joy.biazon@imerchmedia.net",
@@ -155,7 +154,7 @@
       "edgar.namoro@imerchmedia.net",
       "julie.jalandoon@imerchmedia.net",
       "roxanne.fernando@imerchmedia.net",
-      "ron.sarmenta@imerchmedia.net" // Admin
+      "ron.sarmenta@imerchmedia.net"
     ];
 
     document.getElementById("companyEmail").addEventListener("keypress", function(event) {
@@ -182,10 +181,10 @@
 
       errorDiv.style.display = "none";
       
-      // Save to sessionStorage as a backup session
+      // I-save sa sessionStorage ang active login
       sessionStorage.setItem("userEmail", emailInput);
       
-      // Redirect to index.html (Manager Portal)
+      // Pumunta sa index.html kasama ang email sa URL parameter
       window.location.href = "index.html?email=" + encodeURIComponent(emailInput);
     }
   </script>
