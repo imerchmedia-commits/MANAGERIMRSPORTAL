@@ -150,7 +150,6 @@
     select:focus, input[type="text"]:focus {
       border-color: var(--accent);
     }
-    /* Estilo kapag naka-disable o naka-lock ang dropdown */
     select:disabled {
       opacity: 0.8;
       cursor: not-allowed;
@@ -373,13 +372,27 @@
 
     window.onload = function() {
       const urlParams = new URLSearchParams(window.location.search);
-      loggedInEmail = (urlParams.get('email') || sessionStorage.getItem('userEmail') || "").trim().toLowerCase();
+      const urlEmail = urlParams.get('email');
+      const sessionEmail = sessionStorage.getItem('userEmail');
+
+      // Security check: Kung walang email sa URL o walang session, ibalik sa login.html
+      if (!urlEmail || !sessionEmail || urlEmail.trim().toLowerCase() !== sessionEmail.trim().toLowerCase()) {
+        alert("⚠️ Unauthorized Access or Session Expired. Please log in again.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      loggedInEmail = sessionEmail.trim().toLowerCase();
       
-      // Auto-select manager and LOCK the dropdown field so it cannot be changed
-      if (loggedInEmail && emailToManagerMap[loggedInEmail]) {
+      // Auto-select manager and lock dropdown
+      if (emailToManagerMap[loggedInEmail]) {
         const managerSelect = document.getElementById("managerName");
         managerSelect.value = emailToManagerMap[loggedInEmail];
-        managerSelect.disabled = true; // Naka-lock na rito para hindi na mapalitan
+        managerSelect.disabled = true; 
+      } else {
+        alert("⚠️ Email not recognized in manager list.");
+        window.location.href = "login.html";
+        return;
       }
 
       getGPSLocation();
@@ -419,7 +432,6 @@
     }
 
     function submitData() {
-      // Gumamit ng .value kahit naka-disabled para masama pa rin sa payload/submission data
       const name = document.getElementById("managerName").value;
       const locationField = document.getElementById("locationField").value.trim();
 
