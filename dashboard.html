@@ -4,38 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>IMRS - Admin Dashboard</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Leaflet CSS for Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
-      --bg: #f1f5f9;
-      --card-bg: #ffffff;
+      --bg-img: url('background2.png');
+      --card-bg: rgba(255, 255, 255, 0.92);
       --text: #334155;
       --primary: #0f172a;
       --accent: #2563eb;
       --border: #334155;
       --input-bg: #ffffff;
       --input-border: #cbd5e1;
-      --status-bg: #f8fafc;
+      --status-bg: rgba(248, 250, 252, 0.9);
     }
 
     [data-theme="dark"] {
-      --bg: #090d16;
-      --card-bg: #111827;
+      --bg-img: url('background2.png');
+      --card-bg: rgba(17, 24, 39, 0.92);
       --text: #f1f5f9;
       --primary: #f8fafc;
       --accent: #3b82f6;
       --border: #94a3b8;
       --input-bg: #1f2937;
       --input-border: #374151;
-      --status-bg: #1f2937;
+      --status-bg: rgba(31, 41, 55, 0.9);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; transition: background 0.2s, color 0.2s, border-color 0.2s; }
     
     body {
-      background: var(--bg);
+      background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), var(--bg-img);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       color: var(--text);
       padding: 20px;
       min-height: 100vh;
@@ -54,7 +58,8 @@
       border: 3px solid var(--border);
       padding: 20px;
       margin-bottom: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
     }
 
     .header-title h1 {
@@ -123,7 +128,8 @@
       background: var(--card-bg);
       border: 3px solid var(--border);
       padding: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
     }
 
     .card h3 {
@@ -157,7 +163,7 @@
       color: var(--primary);
       text-transform: uppercase;
     }
-    input[type="date"], input[type="text"], select {
+    input[type="date"], input[type="text"], input[type="email"], select {
       width: 100%;
       padding: 10px;
       font-size: 14px;
@@ -200,13 +206,46 @@
     .footer-note {
       text-align: center;
       font-size: 11px;
-      color: #94a3b8;
+      color: #cbd5e1;
       margin-top: 30px;
       line-height: 1.4;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    /* Login Modal Overlay */
+    #loginModal {
+      display: flex;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    .login-box {
+      background: var(--card-bg);
+      border: 3px solid var(--border);
+      padding: 30px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    .login-box h2 {
+      font-size: 18px;
+      margin-bottom: 6px;
+      color: var(--primary);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .login-box p {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 20px;
     }
 
     #loadingOverlay {
-      display: flex;
+      display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.7);
@@ -231,6 +270,19 @@
   </style>
 </head>
 <body data-theme="light">
+
+  <!-- LOGIN MODAL -->
+  <div id="loginModal">
+    <div class="login-box">
+      <h2>Admin Login</h2>
+      <p>Enter your authorized iMerch email address to access the dashboard.</p>
+      <div class="filter-group" style="margin-bottom: 16px;">
+        <label>Email Address</label>
+        <input type="email" id="loginEmailInput" placeholder="name@imerchmedia....">
+      </div>
+      <button class="btn btn-export" style="width: 100%; padding: 12px; font-weight: 700;" onclick="handleDashboardLogin()">Login to Dashboard</button>
+    </div>
+  </div>
 
   <div class="container">
     <div class="header-flex">
@@ -332,26 +384,53 @@
     let allRecords = [];
     let map;
     let markersLayer;
+    let mapInitialized = false;
 
-    // Palitan ito ng iyong Google Apps Script Web App URL kung saan kukunin ang data (GET request)
-    // O kaya ay gumamit ng JSON endpoint mula sa iyong Google Sheet.
+    const allowedAdminEmails = [
+      "ron.sarmenta@imerchmedia.net",
+      "arem.gonzales@imerchmedia.net",
+      "jobey@imerchmedia.com",
+      "glenn@imerchmedia.com",
+      "vicky@imerchmedia.com"
+    ];
+
     const webAppUrl = "https://script.google.com/macros/s/AKfycbxFzaoVv-fpWR8P7IUPZasfUuuu_9ArklU5MdmcW2AcPONGca0ALQdzcr1TpLc9HAqz/exec";
 
     window.onload = function() {
-      // Security / Session check for admin
-      const sessionEmail = sessionStorage.getItem('userEmail');
-      if (!sessionEmail) {
-        alert("⚠️ Unauthorized Access. Please log in first.");
-        window.location.href = "login.html";
+      const sessionEmail = sessionStorage.getItem('adminUserEmail');
+      if (sessionEmail && allowedAdminEmails.includes(sessionEmail.trim().toLowerCase())) {
+        document.getElementById("loginModal").style.display = "none";
+        initDashboard();
+      } else {
+        document.getElementById("loginModal").style.display = "flex";
+      }
+    };
+
+    function handleDashboardLogin() {
+      const inputEmail = document.getElementById("loginEmailInput").value.trim().toLowerCase();
+      if (!inputEmail) {
+        alert("⚠️ Please enter your email address.");
         return;
       }
 
-      initMap();
+      if (allowedAdminEmails.includes(inputEmail)) {
+        sessionStorage.setItem('adminUserEmail', inputEmail);
+        document.getElementById("loginModal").style.display = "none";
+        initDashboard();
+      } else {
+        alert("❌ Access Denied: Unauthorized email address.");
+      }
+    }
+
+    function initDashboard() {
+      if (!mapInitialized) {
+        initMap();
+        mapInitialized = true;
+      }
       fetchAttendanceData();
-    };
+    }
 
     function initMap() {
-      // Center default sa Mandaluyong / Metro Manila
       map = L.map('map').setView([14.5794, 121.0359], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -374,25 +453,23 @@
     }
 
     function handleLogout() {
-      sessionStorage.removeItem("userEmail");
-      window.location.href = "login.html";
+      sessionStorage.removeItem("adminUserEmail");
+      location.reload();
     }
 
     function fetchAttendanceData() {
-      // Kumukuha ng data mula sa Google Apps Script (Gumawa ng GET handler sa code.gs kung kinakailangan o mag-fetch)
-      // Para sa demo/live integration, pinapakita namin ang pagkuha gamit ang fetch GET.
+      document.getElementById("loadingOverlay").style.display = "flex";
       fetch(webAppUrl)
         .then(response => response.json())
         .then(data => {
           document.getElementById("loadingOverlay").style.display = "none";
-          allRecords = data; // Inaasahan na array ng objects o array ng rows ang ibabalik
+          allRecords = data;
           renderTable(allRecords);
           updateMapMarkers(allRecords);
         })
         .catch(error => {
           console.error("Error fetching data:", error);
           document.getElementById("loadingOverlay").style.display = "none";
-          // Mock data fallback kung offline o nag-aabang pa ng GET implementation sa Apps Script
           alert("⚠️ Na-load ang interface. Siguraduhing naka-setup ang doGet(e) sa iyong code.gs para mag-pull ng data.");
         });
     }
@@ -428,6 +505,7 @@
     }
 
     function updateMapMarkers(records) {
+      if (!markersLayer) return;
       markersLayer.clearLayers();
       let bounds = [];
 
@@ -446,7 +524,7 @@
         }
       });
 
-      if (bounds.length > 0) {
+      if (bounds.length > 0 && map) {
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
       }
     }
@@ -457,7 +535,6 @@
       const searchVal = document.getElementById("searchInput").value.toLowerCase();
 
       let filtered = allRecords.filter(row => {
-        // Search filter check across all main fields
         const matchesSearch = 
           (row.name && row.name.toLowerCase().includes(searchVal)) ||
           (row.email && row.email.toLowerCase().includes(searchVal)) ||
@@ -466,13 +543,11 @@
 
         if (!matchesSearch) return false;
 
-        // Date range filter check (Cut-off)
         if (startDateVal || endDateVal) {
           if (!row.timestamp) return false;
           const rowDate = new Date(row.timestamp);
           if (isNaN(rowDate)) return true;
 
-          // I-reset ang oras para sakto sa comparison
           rowDate.setHours(0,0,0,0);
 
           if (startDateVal) {
@@ -495,14 +570,12 @@
     }
 
     function exportToExcel() {
-      // Kuhanin ang kasalukuyang nakasalang na filtered table data
       const table = document.getElementById("attendanceTable");
       if (!table || table.rows.length <= 1) {
         alert("⚠️ Walang ma-export na data.");
         return;
       }
 
-      // Gamit ang SheetJS library para i-convert ang HTML table patungong Excel file (.xlsx)
       const wb = XLSX.utils.table_to_book(table, { sheet: "Attendance Cut-off" });
       XLSX.writeFile(wb, `IMRS_Attendance_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
