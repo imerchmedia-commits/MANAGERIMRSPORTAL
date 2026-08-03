@@ -504,21 +504,30 @@
 
       fetch(webAppUrl, {
         method: "POST",
-        mode: "no-cors",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "text/plain;charset=utf-8"
         },
         body: JSON.stringify(payload)
       })
-      .then(response => {
+      .then(response => response.json())
+      .then(data => {
         document.getElementById("loadingOverlay").style.display = "none";
-        alert("✅ Your " + selectedAction + " has been successfully recorded!");
-        location.reload();
+        
+        if (data.status === "Error") {
+          alert("⚠️ " + data.message);
+        } else {
+          if (payload.action.includes("TIME IN")) {
+            alert("✅ Time In recorded successfully. Please don't forget to Time Out later.");
+          } else {
+            alert("✅ Time Out recorded successfully.");
+          }
+          location.reload();
+        }
       })
       .catch(error => {
         document.getElementById("loadingOverlay").style.display = "none";
         console.error("Error:", error);
-        alert("❌ Error saving data. Please try again.");
+        alert("❌ Error saving data. Please check your connection and try again.");
       });
     }
   </script>
