@@ -516,7 +516,8 @@
         if (data.status === "Error") {
           alert("⚠️ " + data.message);
         } else {
-          if (payload.action.includes("TIME IN")) {
+          // Ginamit ang tamang exact match para lumabas ang paalala sa Time In
+          if (payload.action === "Time In") {
             alert("✅ Time In recorded successfully. Please don't forget to Time Out later.");
           } else {
             alert("✅ Time Out recorded successfully.");
