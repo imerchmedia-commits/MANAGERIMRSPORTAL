@@ -182,8 +182,8 @@
 
       errorDiv.style.display = "none";
       
-      // I-save sa sessionStorage ang active login
-      sessionStorage.setItem("userEmail", emailInput);
+      // I-save sa localStorage para hindi sila ma-auto logout sa mobile/browser
+      localStorage.setItem("userEmail", emailInput);
       
       // Pumunta sa index.html kasama ang email sa URL parameter
       window.location.href = "index.html?email=" + encodeURIComponent(emailInput);
