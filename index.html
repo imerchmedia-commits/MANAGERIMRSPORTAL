@@ -382,7 +382,7 @@
     }
 
     function handleLogout() {
-      sessionStorage.removeItem("userEmail");
+      localStorage.removeItem("userEmail");
       window.location.href = "login.html"; 
     }
 
@@ -401,7 +401,9 @@
     window.onload = function() {
       const urlParams = new URLSearchParams(window.location.search);
       const urlEmail = urlParams.get('email');
-      const sessionEmail = sessionStorage.getItem('userEmail');
+      
+      // Ginamit ang localStorage para hindi sila basta-bastang ma-auto logout
+      const sessionEmail = localStorage.getItem('userEmail');
 
       if (!urlEmail || !sessionEmail || urlEmail.trim().toLowerCase() !== sessionEmail.trim().toLowerCase()) {
         alert("⚠️ Unauthorized Access or Session Expired. Please log in again.");
@@ -516,7 +518,6 @@
         if (data.status === "Error") {
           alert("⚠️ " + data.message);
         } else {
-          // Ginamit ang tamang exact match para lumabas ang paalala sa Time In
           if (payload.action === "Time In") {
             alert("✅ Time In recorded successfully. Please don't forget to Time Out later.");
           } else {
